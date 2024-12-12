@@ -82,8 +82,7 @@ public class TileManager {
 		int y = 0;
 		//loop to move through the entire map
 		while ( col < gp.maxColsize && row < gp.maxRowsize ) {
-			int tileIndex = map[col][row];
-			g2.drawImage(tile[tileIndex].image, x, y, gp.finalsize, gp.finalsize, null); //printing the wall
+			g2.drawImage(tile[map[col][row]].image, x, y, gp.finalsize, gp.finalsize, null); //printing the wall
 			col++; //adding to the column so the tiles do not go out of frame and printing the tile one down
 			x+=gp.finalsize;//updating the position of the tile through its width within the screen
 			//checking if the tiles has hit the bottom of the screen
