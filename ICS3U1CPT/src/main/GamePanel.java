@@ -82,8 +82,8 @@ public class GamePanel extends JPanel implements Runnable{
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g); //needed for the pointComponenet to work
 		Graphics2D g2 = (Graphics2D)g; //Graphics 2D is more sophisticated that regular graphics
-		tileM.draw(g2); //draws the tile, tile first before character overlaps the tile
-		player.draw(g2); // runs the draw method in entity class
+		tileM.draw(g2); //draws the tile through tile manager class, tile first before character overlaps the tile
+		player.draw(g2); // runs the player class
 		g2.dispose(); //gets rid of the drawing, saving resources
 	}
 	
