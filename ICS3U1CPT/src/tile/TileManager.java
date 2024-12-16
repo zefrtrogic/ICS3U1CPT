@@ -40,6 +40,15 @@ public class TileManager {
 			
 			tile[5] = new Tile();
 			tile[5].image = ImageIO.read(getClass().getResourceAsStream("/tiles/sand.png"));
+			
+			tile[7] = new Tile();
+			tile[7].image = ImageIO.read(getClass().getResourceAsStream("/tiles/house1.png"));
+			
+			tile[8] = new Tile();
+			tile[8].image = ImageIO.read(getClass().getResourceAsStream("/tiles/house2.png"));
+			
+			tile[9] = new Tile();
+			tile[9].image = ImageIO.read(getClass().getResourceAsStream("/tiles/house3.png"));		
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -47,7 +56,7 @@ public class TileManager {
 	
 	public void loadMap() {
 		try {
-			InputStream is = getClass().getResourceAsStream("/maps/map3.txt"); //getting text file from map package
+			InputStream is = getClass().getResourceAsStream("/maps/city.txt"); //getting text file from map package, using superclass of all classes to get the file form another package
 			BufferedReader br = new BufferedReader(new InputStreamReader(is)); //Initializing bufferedreader that inputs from the text file
 			//Variables to check boundaries
 			int col = 0;
