@@ -19,16 +19,16 @@ public class GamePanel extends JPanel implements Runnable{
 	public final int screenHeight = finalsize * maxRowsize; //tile size multiplied by the amount of tiles there are in a row to find the length of the window (576) pixels
 	
 	//FPS
-	int FPS = 60;
+	int FPS = 150;
 	TileManager tileM = new TileManager(this); //adds tilemanager into gamepanel from the tilemanager class
 	KeyHandler key = new KeyHandler(); //initialize the keyhandler
 	Thread gameThread; //creating a thread that allows frames
+	public CollisionChecker checker = new CollisionChecker(this); //intializing collision checker
 	Player player = new Player(this,key); //Initiating the player class
-	
 	//Player's starting position on the screen
-	int playerX = 100;
-	int playerY = 100;
-	int playerSpeed = 4;
+	int playerX = 500;
+	int playerY = 500;
+	int playerSpeed = 1;
 		
 	public GamePanel() {
 		this.setPreferredSize(new Dimension(screenWidth, screenHeight)); //setting the dimensions the screen

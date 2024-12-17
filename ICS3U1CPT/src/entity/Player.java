@@ -1,5 +1,6 @@
 package entity;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -16,14 +17,15 @@ public class Player extends Entity {
 	public Player(GamePanel gp, KeyHandler key) {
 		this.gp = gp; //Allowing us to use gamepanel from player class
 		this.key = key; //Allowing us to use keyhandler from player class
+		solidArea = new Rectangle(8, 16, 28, 28); //Initiating the rectangle at pos 8, 16 with a 28 by 28 size
 		DefaultValues(); //runs the default value method to set the players starting position
 		getPlayerImage(); //running the method to upload images for the player
 	}
 	public void DefaultValues() {
 		//creating default values for the players position
-		x = 100; 
-		y = 100;
-		speed = 4;
+		x = 580; 
+		y = 430;
+		speed = 1;
 		direction = "down";
 	}
 	public void getPlayerImage() {
@@ -43,28 +45,25 @@ public class Player extends Entity {
 		}
 	}
 	public void update() {
-		//Checking if the user has pressed a key
+		//Checking if the user has pressed a key and updates the direction based on the input, then updating so that we can include collision
 				if (key.upPressed == true || key.downPressed == true || key.leftPressed == true || key.rightPressed == true) {
 					//checking which key the user has clicked
-				if (key.upPressed == true) {
-					//moves the player 4 coordinate points up on the y axis and updates direction
-					direction = "up";
-					y-=speed;
-				}
-				else if (key.downPressed == true) {
-					//moves the player 4 coordinate points down on the y axis and updates direction
-					direction = "down";
-					y+=speed;
-				}
-				else if (key.leftPressed == true) {
-					//moves the player 4 coordinate points to the left on the x axis and updates direction
-					direction = "left";
-					x-=speed;
-				}
-				else if (key.rightPressed == true) {
-					//moves the player 4 coordinate points to the right on the x axis and updates direction
-					direction = "right";
-					x+=speed;
+				if (key.upPressed == true) direction = "up";
+				else if (key.downPressed == true) direction = "down";
+				else if (key.leftPressed == true) direction = "left";
+				else if (key.rightPressed == true) direction = "right";
+				collisionOn = false; //setting collision to off
+				gp.checker.Checktile(this); //we run the check tile method that passes the Player class as an entity as it is a subclass of the entity class
+				//Checking if player is allowed to move for collision
+				//checking if collision is toggled
+				if (collisionOn == false) {
+					//switch statement to update position of sprite
+					switch (direction) {
+					case "up": y-=speed; break;
+					case "down": y+=speed; break;
+					case "left": x-=speed; break;
+					case "right": x+=speed; break;
+					}
 				}
 				spriteCounter++; // adding to counter
 				// checking if we have hit 12 frames, confirming that is time to change the picture, making a running animation
@@ -86,8 +85,11 @@ public class Player extends Entity {
 		BufferedImage image = null; // Initializing variable to find the image of the input of direction from the user
 		//switch statement to correlate input to image and adding animation with SpriteNum
 		switch(direction) {
+		//checking which direction the input is in through variable
 		case "up":
+			//checking which frame the player is in
 			if (spriteNum == 1) {
+				//switching the image based on the original image
 				image = up1;
 			}
 			if (spriteNum == 2) {
@@ -119,6 +121,6 @@ public class Player extends Entity {
 			}
 			break;
 		}
-		g2.drawImage(image, x, y, gp.finalsize, gp.finalsize, null); //printing the image on the screen
+		g2.drawImage(image, x, y, gp.finalsize, gp.finalsize, null); //printing the new player tile on the screen
 	}
 }
