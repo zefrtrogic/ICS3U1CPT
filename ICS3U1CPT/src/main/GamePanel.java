@@ -2,6 +2,7 @@ package main;
 import javax.swing.JPanel;
 
 import entity.Player;
+import pokemon.masterpokemon;
 import tile.TileManager;
 
 import java.awt.Color;
@@ -24,7 +25,9 @@ public class GamePanel extends JPanel implements Runnable{
 	KeyHandler key = new KeyHandler(); //initialize the keyhandler
 	Thread gameThread; //creating a thread that allows frames
 	public CollisionChecker checker = new CollisionChecker(this); //intializing collision checker
-	Player player = new Player(this,key); //Initiating the player class
+	public pokemonsetter pSetter = new pokemonsetter(this); //Initializing pokemonsetter class and takes in gamepanel class
+	public Player player = new Player(this,key); //Initiating the player class
+	public masterpokemon slot[] = new masterpokemon[10];
 	//Player's starting position on the screen
 	int playerX = 500;
 	int playerY = 500;
@@ -38,6 +41,9 @@ public class GamePanel extends JPanel implements Runnable{
 		this.setFocusable(true); //allows the computer to receive input
 	}
 	
+	public void GameSet() {
+		pSetter.setObject();
+	}
 	public void startGameThread() {
 		gameThread = new Thread(this); //Initializing game thread aka timer
 		gameThread.start(); //Starts the thread that starts the run method since the class implemented runnable
@@ -82,8 +88,14 @@ public class GamePanel extends JPanel implements Runnable{
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g); //needed for the pointComponenet to work
 		Graphics2D g2 = (Graphics2D)g; //Graphics 2D is more sophisticated that regular graphics
-		tileM.draw(g2); //draws the tile through tile manager class, tile first before character overlaps the tile
-		player.draw(g2); // runs the player class
+		tileM.draw(g2); //draws the tile through tile manager class, tile first before character overlaps the tile, from the draw method
+		//Looping through each slot in the array
+		for (int i = 0; i < slot.length; i++) {
+			if (slot[i] != null) {
+				slot[i].draw(g2, this); //setting the slow position to the 
+			}
+		}
+		player.draw(g2); // runs the draw method in the player class, generating the image for the player chracter
 		g2.dispose(); //gets rid of the drawing, saving resources
 	}
 	

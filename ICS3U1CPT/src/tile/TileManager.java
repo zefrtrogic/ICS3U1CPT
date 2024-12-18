@@ -77,7 +77,7 @@ public class TileManager {
 	
 	public void loadMap() {
 		try {
-			InputStream is = getClass().getResourceAsStream("/maps/CinderstoneTown.txt"); //getting text file from map package, using superclass of all classes to get the file form another package
+			InputStream is = getClass().getResourceAsStream("/maps/RedwoodCrossing.txt"); //getting text file from map package, using superclass of all classes to get the file form another package
 			BufferedReader br = new BufferedReader(new InputStreamReader(is)); //Initializing bufferedreader that inputs from the text file
 			//Variables to check boundaries
 			int col = 0;
