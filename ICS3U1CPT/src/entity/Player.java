@@ -8,12 +8,11 @@ import javax.imageio.ImageIO;
 
 import main.GamePanel;
 import main.KeyHandler;
+import tile.TileManager;
 //creating class a subclass of entity
 public class Player extends Entity {
-	 
 	GamePanel gp; //Initializing GamePanel from main class
 	KeyHandler key; //Initializing Keyhandler from main class
-	
 	public Player(GamePanel gp, KeyHandler key) {
 		this.gp = gp; //Allowing us to use gamepanel from player class
 		this.key = key; //Allowing us to use keyhandler from player class
@@ -21,6 +20,7 @@ public class Player extends Entity {
 		DefaultValues(); //runs the default value method to set the players starting position
 		getPlayerImage(); //running the method to upload images for the player
 	}
+	
 	public void DefaultValues() {
 		//creating default values for the players position
 		x = 580; 

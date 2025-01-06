@@ -11,13 +11,27 @@ public class TileManager {
 	GamePanel gp;
 	public Tile[] tile;
 	public int map[][];
+	String[] file;
 	// creating constructor
 	public TileManager(GamePanel gp) {
 		this.gp=gp;
 		tile = new Tile[20]; //Initializing new tile array
-		map = new int[gp.maxColsize][gp.maxRowsize]; //Initializing 2d array to put tiles in map
+		file = new String[10];
+		map = new int[gp.maxColsize][gp.maxRowsize]; //Initializing 3d array to put tiles in map and track which map is being used
 		getTileImage(); //running tile image method
-		loadMap(); //runs map generator method
+		addfiles();
+		loadMap("/maps/Map.txt"); //runs map generator method that passes the map and map number
+	}
+	
+	public void addfiles() {
+		file[0] = "/maps/CinderstoneTown.txt";
+		file[1] = "/maps/route1.txt";
+		file[2] = "/maps/MaplecrestTown.txt";
+		file[3] = "/maps/route2.txt";
+		file[4] = "/maps/RedwoodCrossing.txt";
+		file[5] = "/maps/route2.txt";
+		file[6] = "AmberfallValley.txt";
+		file[7] = "/maps/route3.txt";
 	}
 	
 	public void getTileImage() {
@@ -75,9 +89,9 @@ public class TileManager {
 		}
 	}
 	
-	public void loadMap() {
+	public void loadMap(String filepath) {
 		try {
-			InputStream is = getClass().getResourceAsStream("/maps/route1.txt"); //getting text file from map package, using superclass of all classes to get the file form another package
+			InputStream is = getClass().getResourceAsStream(filepath); //getting text file from map package, using superclass of all classes to get the file form another package
 			BufferedReader br = new BufferedReader(new InputStreamReader(is)); //Initializing bufferedreader that inputs from the text file
 			//Variables to check boundaries
 			int col = 0;
@@ -124,5 +138,9 @@ public class TileManager {
 				y += gp.finalsize;//updating the position of the tile through its length within the screen
 			}
 		}
+	}
+
+	public void update(int num) {
+		loadMap(file[num]);
 	}
 }

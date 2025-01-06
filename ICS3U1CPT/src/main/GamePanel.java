@@ -18,6 +18,8 @@ public class GamePanel extends JPanel implements Runnable{
 	public final int maxRowsize = 12; //making 12 tiles in one row
 	public final int screenWidth = finalsize * maxColsize; //tile size multiplied by the amount of tiles there are in a column to find the width of the window (768) pixels
 	public final int screenHeight = finalsize * maxRowsize; //tile size multiplied by the amount of tiles there are in a row to find the length of the window (576) pixels
+	public int maxMap = 10; //showing the maximun number of maps availble
+	public int currentMap = 0; //updates as we transition into different maps
 	
 	//FPS
 	int FPS = 150;
@@ -28,7 +30,7 @@ public class GamePanel extends JPanel implements Runnable{
 	public pokemonsetter pSetter = new pokemonsetter(this); //Initializing pokemonsetter class and takes in gamepanel class
 	public Player player = new Player(this,key); //Initiating the player class
 	public masterpokemon slot[] = new masterpokemon[10];
-	//Player's starting position on the screen
+	//setting up variables
 	int playerX = 500;
 	int playerY = 500;
 	int playerSpeed = 1;
