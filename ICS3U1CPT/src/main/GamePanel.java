@@ -11,6 +11,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;	
 //Class for Gamepanel that is a subclass of JPanel 
 public class GamePanel extends JPanel implements Runnable{
+	//Scree Settings
 	public final int regularTileScale = 16; //All Tiles in the window will be 16 by 16 (size)
 	public final int scale = 3; //Scaling since resolution is higher on modern computers, this change allows the picture to be 16x16 but looks like 48x48
 	public final int finalsize = regularTileScale * scale; //getting 48*48 tile
@@ -20,6 +21,11 @@ public class GamePanel extends JPanel implements Runnable{
 	public final int screenHeight = finalsize * maxRowsize; //tile size multiplied by the amount of tiles there are in a row to find the length of the window (576) pixels
 	public int maxMap = 10; //showing the maximun number of maps availble
 	public int currentMap = 0; //updates as we transition into different maps
+	//World Setting
+	public final int maxWorldCol = 112;
+	public final int maxWorldRow = 12;
+	public final int worldWidth = regularTileScale*maxWorldCol;
+	public final int worldHeight = regularTileScale*maxWorldRow;
 	
 	//FPS
 	int FPS = 150;

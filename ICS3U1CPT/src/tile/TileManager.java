@@ -17,21 +17,9 @@ public class TileManager {
 		this.gp=gp;
 		tile = new Tile[20]; //Initializing new tile array
 		file = new String[10];
-		map = new int[gp.maxColsize][gp.maxRowsize]; //Initializing 3d array to put tiles in map and track which map is being used
+		map = new int[gp.maxWorldCol][gp.maxWorldRow]; //Initializing 3d array to put tiles in map and track which map is being used
 		getTileImage(); //running tile image method
-		addfiles();
 		loadMap("/maps/Map.txt"); //runs map generator method that passes the map and map number
-	}
-	
-	public void addfiles() {
-		file[0] = "/maps/CinderstoneTown.txt";
-		file[1] = "/maps/route1.txt";
-		file[2] = "/maps/MaplecrestTown.txt";
-		file[3] = "/maps/route2.txt";
-		file[4] = "/maps/RedwoodCrossing.txt";
-		file[5] = "/maps/route2.txt";
-		file[6] = "AmberfallValley.txt";
-		file[7] = "/maps/route3.txt";
 	}
 	
 	public void getTileImage() {
@@ -97,17 +85,17 @@ public class TileManager {
 			int col = 0;
 			int row = 0;
 			//while loop to check boundaries of map
-			while(col < gp.maxColsize && row < gp.maxRowsize) {
+			while(col < gp.maxWorldCol && row < gp.maxWorldRow) {
 			String line = br.readLine();
 			//Running loop to print each tile in a column
-				while (col < gp.maxColsize) {
+				while (col < gp.maxWorldCol) {
 					String[] nums = line.split(" "); //splits the array into different indexes based on the conditions in the brackets, in this case, a space
 					int num = Integer.parseInt(nums[col]); //converting the string into an integer
 					map[col][row] = num; //taking the number into the 2d array
 					col++; //adding to the column counter to make sure we don't create tiles outside the screen/map
 				}
 				// checking if the max column value as been hit
-				if (col == gp.maxColsize) {
+				if (col == gp.maxWorldCol) {
 					col = 0; //resets the column value
 					row++; //goes into the next row since the previous row has been filled
 				}
@@ -122,25 +110,21 @@ public class TileManager {
 		//Variables to check for parameters
 		int col = 0;
 		int row = 0;
-		int x = 0;
-		int y = 0;
+		int y = row * gp.finalsize;
+		
 		//loop to move through the entire map
-		while ( col < gp.maxColsize && row < gp.maxRowsize ) {
-			g2.drawImage(tile[map[col][row]].image, x, y, gp.finalsize, gp.finalsize, null); //printing the wall
+		while ( col < gp.maxWorldCol && row < gp.maxWorldRow ) {
+			int worldX = col * gp.finalsize;
+			int screenX = worldX -gp.player.x + gp.player.screenX; //subtracts player postion from the actual pixel on map so that it can be printed based on the player's position, also adds player position to offset the calculation
+			g2.drawImage(tile[map[col][row]].image, screenX, y, gp.finalsize, gp.finalsize, null); //printing the wall
 			col++; //adding to the column so the tiles do not go out of frame and printing the tile one down
-			x+=gp.finalsize;//updating the position of the tile through its width within the screen
 			//checking if the tiles has hit the bottom of the screen
-			if (col == gp.maxColsize) {
+			if (col == gp.maxWorldCol) {
 				//resetting columns and add 1 to row to move to the next row
 				col = 0;
-				x = 0;
 				row++;
 				y += gp.finalsize;//updating the position of the tile through its length within the screen
 			}
 		}
 	}
-
-	public void update(int num) {
-		loadMap(file[num]);
 	}
-}

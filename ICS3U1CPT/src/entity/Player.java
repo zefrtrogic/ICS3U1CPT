@@ -13,10 +13,12 @@ import tile.TileManager;
 public class Player extends Entity {
 	GamePanel gp; //Initializing GamePanel from main class
 	KeyHandler key; //Initializing Keyhandler from main class
+	public final int screenX; //creating varible to track center poisiton of player on map
 	public Player(GamePanel gp, KeyHandler key) {
 		this.gp = gp; //Allowing us to use gamepanel from player class
 		this.key = key; //Allowing us to use keyhandler from player class
 		solidArea = new Rectangle(8, 16, 28, 28); //Initiating the rectangle at pos 8, 16 with a 28 by 28 size
+		screenX = gp.screenHeight/2; //returns the halfway point of the screen on the x axis
 		DefaultValues(); //runs the default value method to set the players starting position
 		getPlayerImage(); //running the method to upload images for the player
 	}
@@ -121,6 +123,6 @@ public class Player extends Entity {
 			}
 			break;
 		}
-		g2.drawImage(image, x, y, gp.finalsize, gp.finalsize, null); //printing the new player tile on the screen
+		g2.drawImage(image, screenX, y, gp.finalsize, gp.finalsize, null); //printing the new player tile on the screen
 	}
 }
