@@ -17,7 +17,6 @@ public class Main {
 		window.setIconImage(logo.getImage()); //Displaying logo
 		window.setLocationRelativeTo(null); //Displaying window at center of screen
 		window.setVisible(true); //allows user to see the window
-		gamepanel.GameSet(); //calling the gameset method in the game panel class
 		//Calling and stating the game from the gamepanel class and startgamethread method
 		gamepanel.startGameThread();
 	}

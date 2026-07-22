@@ -2,11 +2,11 @@ package main;
 import javax.swing.JPanel;
 
 import entity.Player;
-import pokemon.masterpokemon;
 import tile.TileManager;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;	
 //Class for Gamepanel that is a subclass of JPanel 
@@ -29,13 +29,16 @@ public class GamePanel extends JPanel implements Runnable{
 	
 	//FPS
 	int FPS = 150;
+	//Holds the most recently measured frames-per-second value so it can be drawn on screen.
+	//Updated once per second in run(); paintComponent() just reads this and displays it.
+	public int currentFPS = 0;
+	//Toggle this to true/false to show or hide the on-screen FPS counter
+	public boolean showFPS = true;
 	TileManager tileM = new TileManager(this); //adds tilemanager into gamepanel from the tilemanager class
 	KeyHandler key = new KeyHandler(); //initialize the keyhandler
 	Thread gameThread; //creating a thread that allows frames
 	public CollisionChecker checker = new CollisionChecker(this); //intializing collision checker
-	public pokemonsetter pSetter = new pokemonsetter(this); //Initializing pokemonsetter class and takes in gamepanel class
 	public Player player = new Player(this,key); //Initiating the player class
-	public masterpokemon slot[] = new masterpokemon[10];
 	//setting up variables
 	int playerX = 500;
 	int playerY = 500;
@@ -49,9 +52,6 @@ public class GamePanel extends JPanel implements Runnable{
 		this.setFocusable(true); //allows the computer to receive input
 	}
 	
-	public void GameSet() {
-		pSetter.setObject();
-	}
 	public void startGameThread() {
 		gameThread = new Thread(this); //Initializing game thread aka timer
 		gameThread.start(); //Starts the thread that starts the run method since the class implemented runnable
@@ -83,6 +83,7 @@ public class GamePanel extends JPanel implements Runnable{
 			//if the timer has hit 1 second
 			if (FPStimer >= 1000000000) {
 				//System.out.println("FPS:" + FPScount); //print the counter of the fps value
+				currentFPS = (int) FPScount; //store the measured fps so paintComponent can draw it
 				FPStimer = 0; //reset the fps timer
 				FPScount = 0; // reset the fps counter
 			}
@@ -97,14 +98,28 @@ public class GamePanel extends JPanel implements Runnable{
 		super.paintComponent(g); //needed for the pointComponenet to work
 		Graphics2D g2 = (Graphics2D)g; //Graphics 2D is more sophisticated that regular graphics
 		tileM.draw(g2); //draws the tile through tile manager class, tile first before character overlaps the tile, from the draw method
-		//Looping through each slot in the array
-		for (int i = 0; i < slot.length; i++) {
-			if (slot[i] != null) {
-				slot[i].draw(g2, this); //setting the slow position to the 
-			}
-		}
 		player.draw(g2); // runs the draw method in the player class, generating the image for the player chracter
+		//draw the fps counter last so it stays on top of everything else
+		if (showFPS) {
+			drawFPS(g2);
+		}
 		g2.dispose(); //gets rid of the drawing, saving resources
+	}
+	//draws the current fps value in the top-left corner of the screen
+	private void drawFPS(Graphics2D g2) {
+		g2.setFont(new Font("Arial", Font.BOLD, 20));
+		String fpsText = "FPS: " + currentFPS;
+		int x = 10;
+		int y = 25;
+		//black outline so the text stays readable over any background
+		g2.setColor(Color.black);
+		g2.drawString(fpsText, x - 1, y);
+		g2.drawString(fpsText, x + 1, y);
+		g2.drawString(fpsText, x, y - 1);
+		g2.drawString(fpsText, x, y + 1);
+		//main text on top
+		g2.setColor(Color.white);
+		g2.drawString(fpsText, x, y);
 	}
 	
 }
