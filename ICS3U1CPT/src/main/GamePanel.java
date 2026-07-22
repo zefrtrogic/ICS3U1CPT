@@ -1,5 +1,5 @@
 package main;
-import javax.management.monitor.CounterMonitor;
+import javax.management.monitor.CounterMonitorMBean;
 import javax.swing.JPanel;
 
 import entity.Player;
@@ -41,11 +41,16 @@ public class GamePanel extends JPanel implements Runnable{
 	Thread gameThread; //creating a thread that allows frames
 	public CollisionChecker checker = new CollisionChecker(this); //intializing collision checker
 	AssetSetter aSetter = new AssetSetter(this); //places objects (keys, etc) onto the map
-	public Counter counter = new Counter(this); //draws the on-screen key counter and any future HUD elements
+	public Counter ui = new Counter(this); //draws the on-screen key counter and any future HUD elements
 	public Player player = new Player(this,key); //Initiating the player class
 	//Objects
 	public SuperObject obj[] = new SuperObject[10]; //holds every placeable object currently on the map (keys, etc); empty slots are left null
 	public int keyCount = 0; //how many keys the player has collected so far
+	public final int totalKeys = 10; //how many keys need to be collected before the timer stops
+
+	//Timer
+	public int secondsElapsed = 0; //counts up once per real second while timerRunning is true
+	public boolean timerRunning = true; //Player sets this to false once keyCount reaches totalKeys
 	//setting up variables
 	int playerX = 500;
 	int playerY = 500;
@@ -92,6 +97,9 @@ public class GamePanel extends JPanel implements Runnable{
 			if (FPStimer >= 1000000000) {
 				//System.out.println("FPS:" + FPScount); //print the counter of the fps value
 				currentFPS = (int) FPScount; //store the measured fps so paintComponent can draw it
+				if (timerRunning) {
+					secondsElapsed++; //one real second has passed since the game started
+				}
 				FPStimer = 0; //reset the fps timer
 				FPScount = 0; // reset the fps counter
 			}
@@ -108,11 +116,12 @@ public class GamePanel extends JPanel implements Runnable{
 		tileM.draw(g2); //draws the tile through tile manager class, tile first before character overlaps the tile, from the draw method
 		drawObjects(g2); //draws any keys still left on the map, on top of the tiles but underneath the player
 		player.draw(g2); // runs the draw method in the player class, generating the image for the player chracter
-		counter.draw(g2); //drawing the key counter last so it sits on top of everything else
+		ui.draw(g2); //drawing the key counter last so it sits on top of everything else
 		//draw the fps counter last so it stays on top of everything else
 		if (showFPS) {
 			drawFPS(g2);
 		}
+		drawTimer(g2); //always show the timer, right under the FPS text
 		g2.dispose(); //gets rid of the drawing, saving resources
 	}
 	//draws every object currently on the map (keys, etc), skipping any slot that's been picked up (null)
@@ -141,6 +150,24 @@ public class GamePanel extends JPanel implements Runnable{
 		//main text on top
 		g2.setColor(Color.white);
 		g2.drawString(fpsText, x, y);
+	}
+	//draws the elapsed time (mm:ss) directly under the fps counter; stops updating once timerRunning is false
+	private void drawTimer(Graphics2D g2) {
+		g2.setFont(new Font("Arial", Font.BOLD, 20));
+		int minutes = secondsElapsed / 60;
+		int seconds = secondsElapsed % 60;
+		String timerText = String.format("%02d:%02d", minutes, seconds);
+		int x = 10;
+		int y = 50; //25 (fps line) + 25 spacing puts this line directly under it
+
+		g2.setColor(Color.black);
+		g2.drawString(timerText, x - 1, y);
+		g2.drawString(timerText, x + 1, y);
+		g2.drawString(timerText, x, y - 1);
+		g2.drawString(timerText, x, y + 1);
+
+		g2.setColor(Color.white);
+		g2.drawString(timerText, x, y);
 	}
 	
 }

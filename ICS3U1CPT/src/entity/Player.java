@@ -91,6 +91,9 @@ public class Player extends Entity {
 			case "Key":
 				gp.keyCount++; //add one to the on-screen counter
 				gp.obj[i] = null; //removing the key so it disappears from the map and can't be picked up twice
+				if (gp.keyCount >= gp.totalKeys) {
+					gp.timerRunning = false; //all keys collected, freeze the timer where it is
+				}
 				break;
 			}
 		}
