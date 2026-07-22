@@ -5,6 +5,7 @@ import java.awt.event.KeyListener;
 public class KeyHandler implements KeyListener{
 	
 	public boolean upPressed, downPressed, leftPressed, rightPressed; //global boolean variables to check the status of the key input
+	public boolean rPressed; //true while "R" is held; GamePanel reads and consumes this to trigger a reset
 
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -20,6 +21,7 @@ public class KeyHandler implements KeyListener{
 		if (code == KeyEvent.VK_S || code == KeyEvent.VK_DOWN) downPressed = true;
 		if (code == KeyEvent.VK_A || code == KeyEvent.VK_LEFT) leftPressed = true;
 		if (code == KeyEvent.VK_D || code == KeyEvent.VK_RIGHT) rightPressed = true;
+		if (code == KeyEvent.VK_R) rPressed = true;
 	}
 
 	@Override

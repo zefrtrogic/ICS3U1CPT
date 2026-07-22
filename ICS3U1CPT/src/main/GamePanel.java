@@ -1,5 +1,4 @@
 package main;
-import javax.management.monitor.CounterMonitorMBean;
 import javax.swing.JPanel;
 
 import entity.Player;
@@ -108,6 +107,19 @@ public class GamePanel extends JPanel implements Runnable{
 	//method that updates the players position
 	public void update() {
 		player.update(); //runs the update method in entity class
+		if (key.rPressed) {
+			resetGame(); //restart the run: player position, keys, and timer all go back to their starting state
+			key.rPressed = false; //consume the press so it only resets once per key-down, not every frame it's held
+		}
+	}
+	//restarts a timed run from scratch: repositions the player, clears the key counter,
+	//re-scatters fresh keys onto the map, and starts the timer running again from zero
+	public void resetGame() {
+		player.DefaultValues(); //puts the player back at their starting x/y/direction
+		keyCount = 0;
+		secondsElapsed = 0;
+		timerRunning = true;
+		aSetter.setObject(); //recreates all 10 keys fresh, overwriting any that were picked up (null) or left over
 	}
 	//built in method that draws things
 	public void paintComponent(Graphics g) {
