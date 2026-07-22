@@ -8,7 +8,11 @@ public class Main {
 		JFrame window = new JFrame(); //creating window
 		window.setTitle("Pokemon"); //naming game
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //closes when the user closes the program
-		ImageIcon logo = new ImageIcon("pokemon.png"); //making variable to store logo
+		java.net.URL logoUrl = Main.class.getResource("/logo/pokemon.png"); //make variable to store logo resource
+		if (logoUrl == null) {
+			throw new IllegalStateException("Cannot find logo resource: /logo/pokemon.png");
+		}
+		ImageIcon logo = new ImageIcon(logoUrl); //making variable to store logo
 		//Finding Dimensions and scaling
 		GamePanel gamepanel = new GamePanel(); //Running gamepanel class to get dimension of the screen
 		window.add(gamepanel); //adding the dimension of the gamepanel to the JFrame

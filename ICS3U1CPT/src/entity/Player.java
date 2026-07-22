@@ -8,7 +8,6 @@ import javax.imageio.ImageIO;
 
 import main.GamePanel;
 import main.KeyHandler;
-import tile.TileManager;
 //creating class a subclass of entity
 public class Player extends Entity {
 	GamePanel gp; //Initializing GamePanel from main class
