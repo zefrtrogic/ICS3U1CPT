@@ -66,6 +66,9 @@ public class Player extends Entity {
 					case "right": x+=speed; break;
 					}
 				}
+				//checking if the player has just walked onto an object (like a key) and picking it up if so
+				int objIndex = gp.checker.checkObject(this, true);
+				pickUpObject(objIndex);
 				spriteCounter++; // adding to counter
 				// checking if we have hit 12 frames, confirming that is time to change the picture, making a running animation
 				if (spriteCounter > 12) {
@@ -79,6 +82,18 @@ public class Player extends Entity {
 					spriteCounter = 0; // resetting counter
 				}
 				}
+	}
+	//handles what happens when the player touches an object; i = 999 means nothing was touched this frame
+	public void pickUpObject(int i) {
+		if (i != 999) {
+			String objName = gp.obj[i].name; //check which type of object was touched
+			switch (objName) {
+			case "Key":
+				gp.keyCount++; //add one to the on-screen counter
+				gp.obj[i] = null; //removing the key so it disappears from the map and can't be picked up twice
+				break;
+			}
+		}
 	}
 	public void draw(Graphics2D g2) {
 	//g2.setColor(Color.white); // setting color of the drawing

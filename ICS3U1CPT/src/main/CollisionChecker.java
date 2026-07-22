@@ -1,4 +1,6 @@
 package main;
+import java.awt.Rectangle;
+
 import entity.Entity;
 public class CollisionChecker {
 	GamePanel gp;
@@ -50,5 +52,38 @@ public class CollisionChecker {
 			break;
 		}
 		
+	}
+	//checks whether an entity's solid area is currently overlapping any object in gp.obj (like a key)
+	//player = true means "also return which object index was touched" (used for pickup logic);
+	//pass false for non-player entities that should only ever be blocked, never pick things up
+	public int checkObject(Entity entity, boolean player) {
+		int index = 999; //999 = "no object touched this frame"
+		for (int i = 0; i < gp.obj.length; i++) {
+			if (gp.obj[i] != null) {
+				//building the entity's absolute solid-area rectangle in world coordinates
+				Rectangle entityRect = new Rectangle(
+					entity.x + entity.solidArea.x,
+					entity.y + entity.solidArea.y,
+					entity.solidArea.width,
+					entity.solidArea.height
+				);
+				//building the object's absolute solid-area rectangle in world coordinates
+				Rectangle objectRect = new Rectangle(
+					gp.obj[i].worldX + gp.obj[i].solidArea.x,
+					gp.obj[i].worldY + gp.obj[i].solidArea.y,
+					gp.obj[i].solidArea.width,
+					gp.obj[i].solidArea.height
+				);
+				if (entityRect.intersects(objectRect)) {
+					if (gp.obj[i].collision == true) {
+						entity.collisionOn = true; //blocks movement, for solid objects (not used by keys)
+					}
+					if (player == true) {
+						index = i; //remember which object was touched so Player can handle pickup
+					}
+				}
+			}
+		}
+		return index;
 	}
 }

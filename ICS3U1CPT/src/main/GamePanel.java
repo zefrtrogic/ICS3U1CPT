@@ -1,7 +1,9 @@
 package main;
+import javax.management.monitor.CounterMonitor;
 import javax.swing.JPanel;
 
 import entity.Player;
+import object.SuperObject;
 import tile.TileManager;
 
 import java.awt.Color;
@@ -38,7 +40,12 @@ public class GamePanel extends JPanel implements Runnable{
 	KeyHandler key = new KeyHandler(); //initialize the keyhandler
 	Thread gameThread; //creating a thread that allows frames
 	public CollisionChecker checker = new CollisionChecker(this); //intializing collision checker
+	AssetSetter aSetter = new AssetSetter(this); //places objects (keys, etc) onto the map
+	public Counter counter = new Counter(this); //draws the on-screen key counter and any future HUD elements
 	public Player player = new Player(this,key); //Initiating the player class
+	//Objects
+	public SuperObject obj[] = new SuperObject[10]; //holds every placeable object currently on the map (keys, etc); empty slots are left null
+	public int keyCount = 0; //how many keys the player has collected so far
 	//setting up variables
 	int playerX = 500;
 	int playerY = 500;
@@ -50,6 +57,7 @@ public class GamePanel extends JPanel implements Runnable{
 		this.setDoubleBuffered(true); //Improves game rendering performance by drawing components on an off screen painting buffer
 		this.addKeyListener(key); //adds the key handler, (a.k.a the user controls up, down, right, left)
 		this.setFocusable(true); //allows the computer to receive input
+		aSetter.setObject(); //scattering the keys onto the map before the game starts
 	}
 	
 	public void startGameThread() {
@@ -98,12 +106,25 @@ public class GamePanel extends JPanel implements Runnable{
 		super.paintComponent(g); //needed for the pointComponenet to work
 		Graphics2D g2 = (Graphics2D)g; //Graphics 2D is more sophisticated that regular graphics
 		tileM.draw(g2); //draws the tile through tile manager class, tile first before character overlaps the tile, from the draw method
+		drawObjects(g2); //draws any keys still left on the map, on top of the tiles but underneath the player
 		player.draw(g2); // runs the draw method in the player class, generating the image for the player chracter
+		counter.draw(g2); //drawing the key counter last so it sits on top of everything else
 		//draw the fps counter last so it stays on top of everything else
 		if (showFPS) {
 			drawFPS(g2);
 		}
 		g2.dispose(); //gets rid of the drawing, saving resources
+	}
+	//draws every object currently on the map (keys, etc), skipping any slot that's been picked up (null)
+	public void drawObjects(Graphics2D g2) {
+		for (int i = 0; i < obj.length; i++) {
+			if (obj[i] != null) {
+				//same horizontal-scroll math the tile map uses; the map's full height already fits on screen so no vertical offset is needed
+				int screenX = obj[i].worldX - player.x + player.screenX;
+				int screenY = obj[i].worldY;
+				g2.drawImage(obj[i].image, screenX, screenY, finalsize, finalsize, null);
+			}
+		}
 	}
 	//draws the current fps value in the top-left corner of the screen
 	private void drawFPS(Graphics2D g2) {
