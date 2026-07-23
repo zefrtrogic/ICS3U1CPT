@@ -6,6 +6,7 @@ public class KeyHandler implements KeyListener{
 	
 	public boolean upPressed, downPressed, leftPressed, rightPressed; //global boolean variables to check the status of the key input
 	public boolean rPressed; //true while "R" is held; GamePanel reads and consumes this to trigger a reset
+	public boolean ePressed; //true while "E" is held; GamePanel reads and consumes this to trigger a speed boost
 
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -22,6 +23,7 @@ public class KeyHandler implements KeyListener{
 		if (code == KeyEvent.VK_A || code == KeyEvent.VK_LEFT) leftPressed = true;
 		if (code == KeyEvent.VK_D || code == KeyEvent.VK_RIGHT) rightPressed = true;
 		if (code == KeyEvent.VK_R) rPressed = true;
+		if (code == KeyEvent.VK_E) ePressed = true;
 	}
 
 	@Override

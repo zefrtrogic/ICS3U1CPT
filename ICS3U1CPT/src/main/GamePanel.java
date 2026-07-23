@@ -40,7 +40,7 @@ public class GamePanel extends JPanel implements Runnable{
 	Thread gameThread; //creating a thread that allows frames
 	public CollisionChecker checker = new CollisionChecker(this); //intializing collision checker
 	AssetSetter aSetter = new AssetSetter(this); //places objects (keys, etc) onto the map
-	public Counter ui = new Counter(this); //draws the on-screen key counter and any future HUD elements
+	public UI ui = new UI(this); //draws the on-screen key counter and any future HUD elements
 	public Player player = new Player(this,key); //Initiating the player class
 	//Objects
 	public SuperObject obj[] = new SuperObject[10]; //holds every placeable object currently on the map (keys, etc); empty slots are left null
@@ -50,6 +50,15 @@ public class GamePanel extends JPanel implements Runnable{
 	//Timer
 	public int secondsElapsed = 0; //counts up once per real second while timerRunning is true
 	public boolean timerRunning = true; //Player sets this to false once keyCount reaches totalKeys
+
+	//Speed Boost
+	public final int maxBoosts = 3; //how many times the boost can be used per run
+	public int boostsRemaining = maxBoosts; //ticks down each use; UI shows this so the player knows when they're out
+	public boolean boostActive = false; //true for the 3 seconds after activating a boost
+	private long boostRemainingNanos = 0; //counts down while boostActive; the boost ends when this reaches 0
+	private final long boostDurationNanos = 3000000000L; //3 seconds, in nanoseconds
+	private final int normalSpeed = 1; //player's regular walking speed
+	private final int boostSpeed = 3; //player's speed while boosted
 	//setting up variables
 	int playerX = 500;
 	int playerY = 500;
@@ -83,6 +92,13 @@ public class GamePanel extends JPanel implements Runnable{
 			currentTime = System.nanoTime(); // getting current time of game open in nanoseconds
 			remaining+= (currentTime-lastTime)/interval; //formula to find how much time is needed between each interval
 			FPStimer+=currentTime-lastTime;
+			if (boostActive) {
+				boostRemainingNanos -= (currentTime-lastTime); //counting down the 3-second boost window in real time
+				if (boostRemainingNanos <= 0) {
+					boostActive = false; //boost window is over
+					player.speed = normalSpeed; //back to regular walking speed
+				}
+			}
 			lastTime = currentTime; //making the current time in nanoseconds to the precious time to keep the system running and updating
 			//Statement to check if we have hit the interval time and updates the coordinate points and drawing 
 			if (remaining >= 1) {
@@ -111,14 +127,30 @@ public class GamePanel extends JPanel implements Runnable{
 			resetGame(); //restart the run: player position, keys, and timer all go back to their starting state
 			key.rPressed = false; //consume the press so it only resets once per key-down, not every frame it's held
 		}
+		if (key.ePressed) {
+			activateBoost();
+			key.ePressed = false; //consume the press so holding "E" doesn't keep re-triggering it
+		}
+	}
+	//starts a 3-second speed boost, as long as one isn't already active and charges remain
+	public void activateBoost() {
+		if (!boostActive && boostsRemaining > 0) {
+			boostActive = true;
+			boostRemainingNanos = boostDurationNanos;
+			boostsRemaining--;
+			player.speed = boostSpeed;
+		}
 	}
 	//restarts a timed run from scratch: repositions the player, clears the key counter,
 	//re-scatters fresh keys onto the map, and starts the timer running again from zero
 	public void resetGame() {
-		player.DefaultValues(); //puts the player back at their starting x/y/direction
+		player.DefaultValues(); //puts the player back at their starting x/y/direction (also resets speed to normalSpeed)
 		keyCount = 0;
 		secondsElapsed = 0;
 		timerRunning = true;
+		boostsRemaining = maxBoosts; //refill boost charges for the new run
+		boostActive = false;
+		boostRemainingNanos = 0;
 		aSetter.setObject(); //recreates all 10 keys fresh, overwriting any that were picked up (null) or left over
 	}
 	//built in method that draws things
