@@ -290,8 +290,8 @@ public class GamePanel extends JPanel implements Runnable{
 		g2.drawString(title, (screenWidth - titleWidth) / 2, screenHeight / 2 - 80);
 
 		g2.setFont(new Font("Arial", Font.PLAIN, 18));
-		String line1 = "Hi, Welcome to Coin Chaser!";
-		String line2 = "Collect all 10 coins as fast as you can!";
+		String line1 = "Hi, Welcome to Key Chaser!";
+		String line2 = "Collect all 10 keys as fast as you can!";
 		int line1Width = g2.getFontMetrics().stringWidth(line1);
 		int line2Width = g2.getFontMetrics().stringWidth(line2);
 		g2.drawString(line1, (screenWidth - line1Width) / 2, screenHeight / 2 - 20);
@@ -328,7 +328,7 @@ public class GamePanel extends JPanel implements Runnable{
 
 		g2.setColor(Color.white);
 		g2.setFont(new Font("Arial", Font.BOLD, 28));
-		String message = "Congratulations, you have collected all coins!";
+		String message = "Congratulations, you have collected all keys!";
 		int messageWidth = g2.getFontMetrics().stringWidth(message);
 		g2.drawString(message, (screenWidth - messageWidth) / 2, screenHeight / 2 - 40);
 
