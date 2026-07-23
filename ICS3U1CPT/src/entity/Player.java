@@ -91,8 +91,12 @@ public class Player extends Entity {
 			case "Key":
 				gp.keyCount++; //add one to the on-screen counter
 				gp.obj[i] = null; //removing the key so it disappears from the map and can't be picked up twice
+				gp.playSE(gp.SOUND_KEY); //little chime for each key picked up
 				if (gp.keyCount >= gp.totalKeys) {
 					gp.timerRunning = false; //all keys collected, freeze the timer where it is
+					gp.gameState = gp.endState; //switch to the victory screen
+					gp.stopMusic(); //background music cuts off the moment the run ends
+					gp.playSE(gp.SOUND_END); //the run-complete fanfare
 				}
 				break;
 			}

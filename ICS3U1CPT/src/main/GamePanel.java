@@ -71,9 +71,19 @@ public class GamePanel extends JPanel implements Runnable{
 	//Game State
 	public final int titleState = 0; //sitting on the start screen, waiting for the player to press Start
 	public final int playState = 1; //the actual timed run is in progress
+	public final int endState = 2; //all keys collected, showing the finish time
 	public int gameState = titleState; //game boots straight into the title screen
 	public JButton startButton; //the visible "Start" button shown only during titleState
 	private BufferedImage titleBackground; //a blurred snapshot of the game world, cached the first time the title screen is drawn
+
+	//Sound
+	public final int SOUND_BACKGROUND = 0;
+	public final int SOUND_KEY = 1;
+	public final int SOUND_START = 2;
+	public final int SOUND_END = 3;
+	public final int SOUND_BOOST = 4;
+	public Sound music = new Sound(); //dedicated to the looping background track, kept separate so sound effects don't interrupt it
+	public Sound se = new Sound(); //one-shot sound effects: start, key pickup, end
 	//setting up variables
 	int playerX = 500;
 	int playerY = 500;
@@ -133,6 +143,23 @@ public class GamePanel extends JPanel implements Runnable{
 		timerRunning = true; //the run officially starts now
 		startButton.setVisible(false); //hide the button, it's only needed on the title screen
 		this.requestFocusInWindow(); //clicking the button steals keyboard focus; this gives it back so WASD/E/R work immediately
+		playSE(SOUND_START); //the little jingle for pressing Start
+		playMusic(SOUND_BACKGROUND); //background music kicks in as the run begins
+	}
+	//(re)starts the looping background music, stopping whatever it was playing first
+	public void playMusic(int i) {
+		music.stop();
+		music.setFile(i);
+		music.loop();
+	}
+	//cuts off the background music (used when the run ends)
+	public void stopMusic() {
+		music.stop();
+	}
+	//plays a one-shot sound effect (start jingle, key pickup, end fanfare) without affecting the background music
+	public void playSE(int i) {
+		se.setFile(i);
+		se.play();
 	}
 	
 	public void startGameThread() {
@@ -186,13 +213,15 @@ public class GamePanel extends JPanel implements Runnable{
 	public void update() {
 		if (gameState == playState) {
 			player.update(); //runs the update method in entity class
-			if (key.rPressed) {
-				resetGame(); //restart the run: player position, keys, and timer all go back to their starting state
-				key.rPressed = false; //consume the press so it only resets once per key-down, not every frame it's held
-			}
 			if (key.ePressed) {
 				activateBoost();
 				key.ePressed = false; //consume the press so holding "E" doesn't keep re-triggering it
+			}
+		}
+		if (gameState == playState || gameState == endState) {
+			if (key.rPressed) {
+				resetGame(); //restart the run: player position, keys, and timer all go back to their starting state
+				key.rPressed = false; //consume the press so it only resets once per key-down, not every frame it's held
 			}
 		}
 	}
@@ -203,6 +232,7 @@ public class GamePanel extends JPanel implements Runnable{
 			boostRemainingNanos = boostDurationNanos;
 			boostsRemaining--;
 			player.speed = boostSpeed;
+			playSE(SOUND_BOOST); //little whoosh sound the moment the boost kicks in
 		}
 	}
 	//restarts a timed run from scratch: repositions the player, clears the key counter,
@@ -216,6 +246,8 @@ public class GamePanel extends JPanel implements Runnable{
 		boostActive = false;
 		boostRemainingNanos = 0;
 		aSetter.setObject(); //recreates all 10 keys fresh, overwriting any that were picked up (null) or left over
+		gameState = playState; //in case this was called from the end screen, jump back into gameplay
+		playMusic(SOUND_BACKGROUND); //restart the background track fresh for the new run
 	}
 	//built in method that draws things
 	public void paintComponent(Graphics g) {
@@ -234,6 +266,8 @@ public class GamePanel extends JPanel implements Runnable{
 				drawFPS(g2);
 			}
 			drawTimer(g2); //always show the timer, right under the FPS text
+		} else if (gameState == endState) {
+			drawEndScreen(g2);
 		}
 		g2.dispose(); //gets rid of the drawing, saving resources
 	}
@@ -281,6 +315,34 @@ public class GamePanel extends JPanel implements Runnable{
 		Kernel kernel = new Kernel(blurSize, blurSize, data);
 		ConvolveOp blurOp = new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);
 		return blurOp.filter(snapshot, null);
+	}
+	//draws the victory screen once all keys have been collected, reusing the same blurred background as the title screen
+	private void drawEndScreen(Graphics2D g2) {
+		if (titleBackground == null) {
+			titleBackground = createBlurredBackground(); //safety net in case this somehow got reached without visiting the title screen first
+		}
+		g2.drawImage(titleBackground, 0, 0, null);
+
+		g2.setColor(new Color(0, 0, 0, 140));
+		g2.fillRect(0, 0, screenWidth, screenHeight);
+
+		g2.setColor(Color.white);
+		g2.setFont(new Font("Arial", Font.BOLD, 28));
+		String message = "Congratulations, you have collected all coins!";
+		int messageWidth = g2.getFontMetrics().stringWidth(message);
+		g2.drawString(message, (screenWidth - messageWidth) / 2, screenHeight / 2 - 40);
+
+		int minutes = secondsElapsed / 60;
+		int seconds = secondsElapsed % 60;
+		String timeText = "Your time: " + String.format("%02d:%02d", minutes, seconds);
+		g2.setFont(new Font("Arial", Font.PLAIN, 22));
+		int timeWidth = g2.getFontMetrics().stringWidth(timeText);
+		g2.drawString(timeText, (screenWidth - timeWidth) / 2, screenHeight / 2);
+
+		String restartHint = "Press R to play again";
+		g2.setFont(new Font("Arial", Font.PLAIN, 16));
+		int hintWidth = g2.getFontMetrics().stringWidth(restartHint);
+		g2.drawString(restartHint, (screenWidth - hintWidth) / 2, screenHeight / 2 + 40);
 	}
 	//draws every object currently on the map (keys, etc), skipping any slot that's been picked up (null)
 	public void drawObjects(Graphics2D g2) {
