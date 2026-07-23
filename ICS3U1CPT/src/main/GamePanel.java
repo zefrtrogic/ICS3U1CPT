@@ -1,15 +1,23 @@
 package main;
 import javax.swing.JPanel;
+import javax.swing.JButton;
 
 import entity.Player;
 import object.SuperObject;
 import tile.TileManager;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;	
+import java.awt.Graphics2D;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
+import java.util.Arrays;
 //Class for Gamepanel that is a subclass of JPanel 
 public class GamePanel extends JPanel implements Runnable{
 	//Scree Settings
@@ -59,6 +67,13 @@ public class GamePanel extends JPanel implements Runnable{
 	private final long boostDurationNanos = 3000000000L; //3 seconds, in nanoseconds
 	private final int normalSpeed = 1; //player's regular walking speed
 	private final int boostSpeed = 3; //player's speed while boosted
+
+	//Game State
+	public final int titleState = 0; //sitting on the start screen, waiting for the player to press Start
+	public final int playState = 1; //the actual timed run is in progress
+	public int gameState = titleState; //game boots straight into the title screen
+	public JButton startButton; //the visible "Start" button shown only during titleState
+	private BufferedImage titleBackground; //a blurred snapshot of the game world, cached the first time the title screen is drawn
 	//setting up variables
 	int playerX = 500;
 	int playerY = 500;
@@ -70,7 +85,54 @@ public class GamePanel extends JPanel implements Runnable{
 		this.setDoubleBuffered(true); //Improves game rendering performance by drawing components on an off screen painting buffer
 		this.addKeyListener(key); //adds the key handler, (a.k.a the user controls up, down, right, left)
 		this.setFocusable(true); //allows the computer to receive input
+		this.setLayout(null); //switching off the default layout manager so the start button can be positioned manually with setBounds
 		aSetter.setObject(); //scattering the keys onto the map before the game starts
+		timerRunning = false; //the timer shouldn't run while sitting on the title screen
+		setupStartButton();
+	}
+	//creates the "Start" button shown on the title screen, styled as plain text that grows/brightens on hover
+	private void setupStartButton() {
+		startButton = new JButton("Start");
+		startButton.setFont(new Font("Arial", Font.BOLD, 28));
+		startButton.setForeground(Color.white);
+		startButton.setContentAreaFilled(false); //no button background
+		startButton.setBorderPainted(false); //no button border/box
+		startButton.setFocusPainted(false); //no focus rectangle
+		startButton.setOpaque(false);
+		startButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); //signals it's clickable even without a visible button shape
+
+		int centerX = screenWidth / 2;
+		int baseY = screenHeight / 2 + 30; //placed just under the description text drawn in drawTitleScreen
+
+		//normal size/position
+		int normalWidth = 100, normalHeight = 40;
+		startButton.setBounds(centerX - normalWidth / 2, baseY, normalWidth, normalHeight);
+
+		//slightly larger size/position used on hover, to create the "pop out" effect
+		int hoverWidth = 130, hoverHeight = 50;
+
+		startButton.addMouseListener(new MouseAdapter() {
+			public void mouseEntered(MouseEvent e) {
+				startButton.setFont(new Font("Arial", Font.BOLD, 34));
+				startButton.setForeground(Color.yellow);
+				startButton.setBounds(centerX - hoverWidth / 2, baseY - 5, hoverWidth, hoverHeight);
+			}
+			public void mouseExited(MouseEvent e) {
+				startButton.setFont(new Font("Arial", Font.BOLD, 28));
+				startButton.setForeground(Color.white);
+				startButton.setBounds(centerX - normalWidth / 2, baseY, normalWidth, normalHeight);
+			}
+		});
+
+		startButton.addActionListener(e -> startGame());
+		this.add(startButton);
+	}
+	//called when the player clicks Start: begins the timed run and hands keyboard focus back to the game panel
+	public void startGame() {
+		gameState = playState;
+		timerRunning = true; //the run officially starts now
+		startButton.setVisible(false); //hide the button, it's only needed on the title screen
+		this.requestFocusInWindow(); //clicking the button steals keyboard focus; this gives it back so WASD/E/R work immediately
 	}
 	
 	public void startGameThread() {
@@ -122,14 +184,16 @@ public class GamePanel extends JPanel implements Runnable{
 	}
 	//method that updates the players position
 	public void update() {
-		player.update(); //runs the update method in entity class
-		if (key.rPressed) {
-			resetGame(); //restart the run: player position, keys, and timer all go back to their starting state
-			key.rPressed = false; //consume the press so it only resets once per key-down, not every frame it's held
-		}
-		if (key.ePressed) {
-			activateBoost();
-			key.ePressed = false; //consume the press so holding "E" doesn't keep re-triggering it
+		if (gameState == playState) {
+			player.update(); //runs the update method in entity class
+			if (key.rPressed) {
+				resetGame(); //restart the run: player position, keys, and timer all go back to their starting state
+				key.rPressed = false; //consume the press so it only resets once per key-down, not every frame it's held
+			}
+			if (key.ePressed) {
+				activateBoost();
+				key.ePressed = false; //consume the press so holding "E" doesn't keep re-triggering it
+			}
 		}
 	}
 	//starts a 3-second speed boost, as long as one isn't already active and charges remain
@@ -157,16 +221,66 @@ public class GamePanel extends JPanel implements Runnable{
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g); //needed for the pointComponenet to work
 		Graphics2D g2 = (Graphics2D)g; //Graphics 2D is more sophisticated that regular graphics
-		tileM.draw(g2); //draws the tile through tile manager class, tile first before character overlaps the tile, from the draw method
-		drawObjects(g2); //draws any keys still left on the map, on top of the tiles but underneath the player
-		player.draw(g2); // runs the draw method in the player class, generating the image for the player chracter
-		ui.draw(g2); //drawing the key counter last so it sits on top of everything else
-		//draw the fps counter last so it stays on top of everything else
-		if (showFPS) {
-			drawFPS(g2);
+
+		if (gameState == titleState) {
+			drawTitleScreen(g2); //just the description text; the Start button draws itself as a normal Swing component
+		} else if (gameState == playState) {
+			tileM.draw(g2); //draws the tile through tile manager class, tile first before character overlaps the tile, from the draw method
+			drawObjects(g2); //draws any keys still left on the map, on top of the tiles but underneath the player
+			player.draw(g2); // runs the draw method in the player class, generating the image for the player chracter
+			ui.draw(g2); //drawing the key counter last so it sits on top of everything else
+			//draw the fps counter last so it stays on top of everything else
+			if (showFPS) {
+				drawFPS(g2);
+			}
+			drawTimer(g2); //always show the timer, right under the FPS text
 		}
-		drawTimer(g2); //always show the timer, right under the FPS text
 		g2.dispose(); //gets rid of the drawing, saving resources
+	}
+	//draws the title screen's heading and description over a blurred snapshot of the game world;
+	//the Start button itself is a real JButton, added in setupStartButton()
+	private void drawTitleScreen(Graphics2D g2) {
+		if (titleBackground == null) {
+			titleBackground = createBlurredBackground(); //only needs to be rendered once, it never changes
+		}
+		g2.drawImage(titleBackground, 0, 0, null);
+
+		//dark translucent overlay so the white text stays readable over the busy blurred scene
+		g2.setColor(new Color(0, 0, 0, 140));
+		g2.fillRect(0, 0, screenWidth, screenHeight);
+
+		g2.setColor(Color.white);
+		g2.setFont(new Font("Arial", Font.BOLD, 40));
+		String title = "Coin Chaser";
+		int titleWidth = g2.getFontMetrics().stringWidth(title);
+		g2.drawString(title, (screenWidth - titleWidth) / 2, screenHeight / 2 - 80);
+
+		g2.setFont(new Font("Arial", Font.PLAIN, 18));
+		String line1 = "Hi, Welcome to Coin Chaser!";
+		String line2 = "Collect all 10 coins as fast as you can!";
+		int line1Width = g2.getFontMetrics().stringWidth(line1);
+		int line2Width = g2.getFontMetrics().stringWidth(line2);
+		g2.drawString(line1, (screenWidth - line1Width) / 2, screenHeight / 2 - 20);
+		g2.drawString(line2, (screenWidth - line2Width) / 2, screenHeight / 2 + 10);
+	}
+	//renders a normal frame of gameplay off-screen, then blurs it with a box-blur convolution
+	//to use as the title screen's background
+	private BufferedImage createBlurredBackground() {
+		BufferedImage snapshot = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D sg2 = snapshot.createGraphics();
+		tileM.draw(sg2); //drawing the map, keys, and player exactly like a normal frame, just off-screen
+		drawObjects(sg2);
+		player.draw(sg2);
+		sg2.dispose();
+
+		//averaging every pixel with a wide neighborhood around it produces a simple, cheap blur
+		int blurSize = 9;
+		float weight = 1.0f / (blurSize * blurSize);
+		float[] data = new float[blurSize * blurSize];
+		Arrays.fill(data, weight);
+		Kernel kernel = new Kernel(blurSize, blurSize, data);
+		ConvolveOp blurOp = new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);
+		return blurOp.filter(snapshot, null);
 	}
 	//draws every object currently on the map (keys, etc), skipping any slot that's been picked up (null)
 	public void drawObjects(Graphics2D g2) {
