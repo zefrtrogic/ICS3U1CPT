@@ -17,6 +17,8 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 //Class for Gamepanel that is a subclass of JPanel 
 public class GamePanel extends JPanel implements Runnable{
@@ -84,6 +86,11 @@ public class GamePanel extends JPanel implements Runnable{
 	public final int SOUND_BOOST = 4;
 	public Sound music = new Sound(); //dedicated to the looping background track, kept separate so sound effects don't interrupt it
 	public Sound se = new Sound(); //one-shot sound effects: start, key pickup, end
+
+	//Font
+	//the retro pixel font used everywhere text is drawn (HUD, title screen, end screen, the Start button);
+	//loaded once in the constructor. Use gameFont.deriveFont(size) to get it at a specific size.
+	public Font gameFont;
 	//setting up variables
 	int playerX = 500;
 	int playerY = 500;
@@ -98,12 +105,27 @@ public class GamePanel extends JPanel implements Runnable{
 		this.setLayout(null); //switching off the default layout manager so the start button can be positioned manually with setBounds
 		aSetter.setObject(); //scattering the keys onto the map before the game starts
 		timerRunning = false; //the timer shouldn't run while sitting on the title screen
+		gameFont = loadGameFont();
 		setupStartButton();
+	}
+	//loads the retro pixel font from res/fonts; falls back to a built-in monospaced font
+	//if the file isn't there yet, so the game never crashes over a missing font
+	private Font loadGameFont() {
+		try (InputStream is = getClass().getResourceAsStream("/fonts/PressStart2P.ttf")) {
+			if (is == null) {
+				throw new IOException("Font resource not found at /fonts/PressStart2P.ttf");
+			}
+			Font custom = Font.createFont(Font.TRUETYPE_FONT, is);
+			return custom;
+		} catch (Exception e) {
+			System.out.println("Retro font not found in res/fonts - using a built-in monospaced font instead.");
+			return new Font("Monospaced", Font.BOLD, 20);
+		}
 	}
 	//creates the "Start" button shown on the title screen, styled as plain text that grows/brightens on hover
 	private void setupStartButton() {
 		startButton = new JButton("Start");
-		startButton.setFont(new Font("Arial", Font.BOLD, 28));
+		startButton.setFont(gameFont.deriveFont(18f));
 		startButton.setForeground(Color.white);
 		startButton.setContentAreaFilled(false); //no button background
 		startButton.setBorderPainted(false); //no button border/box
@@ -123,12 +145,12 @@ public class GamePanel extends JPanel implements Runnable{
 
 		startButton.addMouseListener(new MouseAdapter() {
 			public void mouseEntered(MouseEvent e) {
-				startButton.setFont(new Font("Arial", Font.BOLD, 34));
+				startButton.setFont(gameFont.deriveFont(22f));
 				startButton.setForeground(Color.yellow);
 				startButton.setBounds(centerX - hoverWidth / 2, baseY - 5, hoverWidth, hoverHeight);
 			}
 			public void mouseExited(MouseEvent e) {
-				startButton.setFont(new Font("Arial", Font.BOLD, 28));
+				startButton.setFont(gameFont.deriveFont(18f));
 				startButton.setForeground(Color.white);
 				startButton.setBounds(centerX - normalWidth / 2, baseY, normalWidth, normalHeight);
 			}
@@ -269,7 +291,10 @@ public class GamePanel extends JPanel implements Runnable{
 		} else if (gameState == endState) {
 			drawEndScreen(g2);
 		}
-		g2.dispose(); //gets rid of the drawing, saving resources
+		//NOTE: g2.dispose() used to be called here. g2 is the SAME object as the "g" parameter Swing
+		//passes in (not a copy from g.create()), and Swing reuses that exact object to paint child
+		//components - like the Start button - right after this method returns. Disposing it here was
+		//silently breaking the button's text rendering. Don't dispose a Graphics object you didn't create.
 	}
 	//draws the title screen's heading and description over a blurred snapshot of the game world;
 	//the Start button itself is a real JButton, added in setupStartButton()
@@ -284,12 +309,12 @@ public class GamePanel extends JPanel implements Runnable{
 		g2.fillRect(0, 0, screenWidth, screenHeight);
 
 		g2.setColor(Color.white);
-		g2.setFont(new Font("Arial", Font.BOLD, 40));
-		String title = "Coin Chaser";
+		g2.setFont(gameFont.deriveFont(28f));
+		String title = "Key Chaser";
 		int titleWidth = g2.getFontMetrics().stringWidth(title);
 		g2.drawString(title, (screenWidth - titleWidth) / 2, screenHeight / 2 - 80);
 
-		g2.setFont(new Font("Arial", Font.PLAIN, 18));
+		g2.setFont(gameFont.deriveFont(16f));
 		String line1 = "Hi, Welcome to Key Chaser!";
 		String line2 = "Collect all 10 keys as fast as you can!";
 		int line1Width = g2.getFontMetrics().stringWidth(line1);
@@ -327,7 +352,7 @@ public class GamePanel extends JPanel implements Runnable{
 		g2.fillRect(0, 0, screenWidth, screenHeight);
 
 		g2.setColor(Color.white);
-		g2.setFont(new Font("Arial", Font.BOLD, 28));
+		g2.setFont(gameFont.deriveFont(18f));
 		String message = "Congratulations, you have collected all keys!";
 		int messageWidth = g2.getFontMetrics().stringWidth(message);
 		g2.drawString(message, (screenWidth - messageWidth) / 2, screenHeight / 2 - 40);
@@ -335,12 +360,12 @@ public class GamePanel extends JPanel implements Runnable{
 		int minutes = secondsElapsed / 60;
 		int seconds = secondsElapsed % 60;
 		String timeText = "Your time: " + String.format("%02d:%02d", minutes, seconds);
-		g2.setFont(new Font("Arial", Font.PLAIN, 22));
+		g2.setFont(gameFont.deriveFont(14f));
 		int timeWidth = g2.getFontMetrics().stringWidth(timeText);
 		g2.drawString(timeText, (screenWidth - timeWidth) / 2, screenHeight / 2);
 
 		String restartHint = "Press R to play again";
-		g2.setFont(new Font("Arial", Font.PLAIN, 16));
+		g2.setFont(gameFont.deriveFont(11f));
 		int hintWidth = g2.getFontMetrics().stringWidth(restartHint);
 		g2.drawString(restartHint, (screenWidth - hintWidth) / 2, screenHeight / 2 + 40);
 	}
@@ -357,7 +382,7 @@ public class GamePanel extends JPanel implements Runnable{
 	}
 	//draws the current fps value in the top-left corner of the screen
 	private void drawFPS(Graphics2D g2) {
-		g2.setFont(new Font("Arial", Font.BOLD, 20));
+		g2.setFont(gameFont.deriveFont(14f));
 		String fpsText = "FPS: " + currentFPS;
 		int x = 10;
 		int y = 25;
@@ -373,7 +398,7 @@ public class GamePanel extends JPanel implements Runnable{
 	}
 	//draws the elapsed time (mm:ss) directly under the fps counter; stops updating once timerRunning is false
 	private void drawTimer(Graphics2D g2) {
-		g2.setFont(new Font("Arial", Font.BOLD, 20));
+		g2.setFont(gameFont.deriveFont(20f));
 		int minutes = secondsElapsed / 60;
 		int seconds = secondsElapsed % 60;
 		String timerText = String.format("%02d:%02d", minutes, seconds);

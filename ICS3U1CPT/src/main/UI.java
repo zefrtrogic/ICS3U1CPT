@@ -9,12 +9,10 @@ import javax.imageio.ImageIO;
 //Handles drawing on-screen UI elements (the key counter for now, more can be added later)
 public class UI {
 	GamePanel gp;
-	Font font;
 	BufferedImage keyImage; //small icon shown next to the counter, separate from the in-world key objects
 
 	public UI(GamePanel gp) {
 		this.gp = gp;
-		font = new Font("Arial", Font.BOLD, 20);
 		try {
 			keyImage = ImageIO.read(getClass().getResourceAsStream("/objects/key.png"));
 		} catch (IOException e) {
@@ -23,7 +21,7 @@ public class UI {
 	}
 
 	public void draw(Graphics2D g2) {
-		g2.setFont(font);
+		g2.setFont(gp.gameFont.deriveFont(20f)); //bigger so the key count is easy to read at a glance
 
 		int iconSize = 32;
 		int margin = 10;
@@ -35,7 +33,8 @@ public class UI {
 		}
 
 		String text = "x " + gp.keyCount;
-		int textX = iconX - 45; //placing the count just to the left of the icon
+		int textWidth = g2.getFontMetrics().stringWidth(text); //measuring so the bigger text still lines up cleanly next to the icon
+		int textX = iconX - textWidth - 8;
 		int textY = iconY + 24;
 
 		//black outline so the number stays readable over any background, same trick as the FPS counter
@@ -54,6 +53,7 @@ public class UI {
 
 	//shows how many speed boosts are left, bottom-left corner; turns yellow while a boost is currently active
 	private void drawBoostCounter(Graphics2D g2) {
+		g2.setFont(gp.gameFont.deriveFont(14f)); //resetting the size back down, since draw() just left it bigger for the key count
 		String text = "Boosts: " + gp.boostsRemaining + "/" + gp.maxBoosts;
 		int x = 10;
 		int y = gp.screenHeight - 15; //small margin up from the bottom edge
@@ -70,6 +70,7 @@ public class UI {
 
 	//shows the player's position on the map as a tile column/row (a simple grid coordinate system), bottom-right corner
 	private void drawCoordinates(Graphics2D g2) {
+		g2.setFont(gp.gameFont.deriveFont(14f)); //resetting the size back down, same reason as drawBoostCounter
 		int col = gp.player.x / gp.finalsize; //converting the player's pixel position into a tile grid position
 		int row = gp.player.y / gp.finalsize;
 		String text = "(" + col + ", " + row + ")";
