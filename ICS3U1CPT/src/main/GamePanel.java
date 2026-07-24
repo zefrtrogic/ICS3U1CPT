@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseAdapter;
@@ -77,6 +78,7 @@ public class GamePanel extends JPanel implements Runnable{
 	public int gameState = titleState; //game boots straight into the title screen
 	public JButton startButton; //the visible "Start" button shown only during titleState
 	private BufferedImage titleBackground; //a blurred snapshot of the game world, cached the first time the title screen is drawn
+	private final long titleAnimStartNanos = System.nanoTime(); //reference point the title screen's bob/glow animation is timed against
 
 	//Sound
 	public final int SOUND_BACKGROUND = 0;
@@ -124,7 +126,29 @@ public class GamePanel extends JPanel implements Runnable{
 	}
 	//creates the "Start" button shown on the title screen, styled as plain text that grows/brightens on hover
 	private void setupStartButton() {
-		startButton = new JButton("Start");
+		//overriding paintComponent to drop a soft shadow behind the text while the mouse is hovering;
+		//drawn first so the real button (painted by super.paintComponent) lands on top of it
+		startButton = new JButton("Start") {
+			protected void paintComponent(Graphics g) {
+				if (getModel().isRollover()) {
+					Graphics2D sg2 = (Graphics2D) g.create();
+					sg2.setFont(getFont());
+					FontMetrics fm = sg2.getFontMetrics();
+					String text = getText();
+					int textX = (getWidth() - fm.stringWidth(text)) / 2;
+					int textY = (getHeight() + fm.getAscent()) / 2 - 4;
+					//a few stacked offsets at falling opacity fake a soft blur without an actual convolution
+					int[] offsets = {5, 4, 3};
+					int[] alphas = {40, 70, 110};
+					for (int i = 0; i < offsets.length; i++) {
+						sg2.setColor(new Color(0, 0, 0, alphas[i]));
+						sg2.drawString(text, textX + offsets[i], textY + offsets[i]);
+					}
+					sg2.dispose();
+				}
+				super.paintComponent(g);
+			}
+		};
 		startButton.setFont(gameFont.deriveFont(18f));
 		startButton.setForeground(Color.white);
 		startButton.setContentAreaFilled(false); //no button background
@@ -308,11 +332,19 @@ public class GamePanel extends JPanel implements Runnable{
 		g2.setColor(new Color(0, 0, 0, 140));
 		g2.fillRect(0, 0, screenWidth, screenHeight);
 
-		g2.setColor(Color.white);
+		//gentle up/down float plus a white-to-yellow glow pulse, both driven off the same sine wave
+		//so the title feels alive instead of sitting static on the screen
+		double elapsedSeconds = (System.nanoTime() - titleAnimStartNanos) / 1_000_000_000.0;
+		int titleBob = (int) Math.round(Math.sin(elapsedSeconds * 2.2) * 6); //+-6px float
+		float glow = (float) (Math.sin(elapsedSeconds * 2.2) * 0.5 + 0.5); //0..1
+		g2.setColor(new Color(255, (int) (255 - glow * 45), (int) (255 - glow * 255))); //white <-> warm yellow
+
 		g2.setFont(gameFont.deriveFont(28f));
 		String title = "Key Chaser";
 		int titleWidth = g2.getFontMetrics().stringWidth(title);
-		g2.drawString(title, (screenWidth - titleWidth) / 2, screenHeight / 2 - 80);
+		g2.drawString(title, (screenWidth - titleWidth) / 2, screenHeight / 2 - 80 + titleBob);
+
+		g2.setColor(Color.white);
 
 		g2.setFont(gameFont.deriveFont(16f));
 		String line1 = "Hi, Welcome to Key Chaser!";
